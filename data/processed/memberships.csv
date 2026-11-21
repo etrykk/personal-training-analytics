@@ -1,0 +1,50 @@
+membership_id,client_id,plan_name,start_date,end_date,monthly_fee,status,cancellation_date,cancellation_reason,membership_duration_days
+M001,C005,Standard,2025-10-24,2025-12-11,125,canceled,2025-12-11,Personal reasons,48
+M002,C006,Standard,2026-08-27,2026-11-18,125,canceled,2026-11-18,Too expensive,83
+M003,C008,Basic,2025-07-12,2025-10-17,75,expired,,,97
+M004,C009,Standard,2026-11-05,,125,active,,,15
+M005,C010,Basic,2026-09-26,,75,active,,,55
+M006,C013,Basic,2026-07-11,2026-08-22,75,expired,,,42
+M007,C015,Basic,2026-01-06,2026-07-19,75,canceled,2026-07-19,Personal reasons,194
+M008,C016,Standard,2026-07-17,,125,active,,,126
+M009,C022,Basic,2026-02-02,2026-07-12,75,canceled,2026-07-12,Too expensive,160
+M010,C026,Basic,2026-05-10,2026-05-27,75,canceled,2026-05-27,Scheduling conflicts,17
+M011,C031,Standard,2025-07-13,,125,active,,,495
+M012,C033,Standard,2026-10-16,2026-11-01,125,expired,,,16
+M013,C034,Standard,2026-09-20,,125,active,,,61
+M014,C035,Basic,2026-02-03,,75,active,,,290
+M015,C038,Basic,2026-11-17,,75,active,,,3
+M016,C039,Basic,2026-09-17,2026-11-03,75,expired,,,47
+M017,C040,Premium,2026-09-05,,200,active,,,76
+M018,C044,Premium,2026-10-27,,200,active,,,24
+M019,C046,Standard,2025-12-13,2026-02-05,125,canceled,2026-02-05,Relocation,54
+M020,C047,Premium,2026-11-01,,200,active,,,19
+M021,C048,Standard,2026-10-17,,125,active,,,34
+M022,C049,Basic,2025-08-17,,75,active,,,460
+M023,C051,Basic,2026-05-29,,75,active,,,175
+M024,C052,Premium,2026-09-17,,200,active,,,64
+M025,C054,Premium,2025-08-24,2026-10-25,200,expired,,,427
+M026,C056,Basic,2024-11-12,,75,active,,,738
+M027,C057,Basic,2026-11-05,,75,active,,,15
+M028,C058,Premium,2025-08-05,2026-02-02,200,expired,,,181
+M029,C062,Basic,2025-11-11,,75,active,,,374
+M030,C063,Standard,2025-12-04,2026-04-19,125,canceled,2026-04-19,Too expensive,136
+M031,C064,Standard,2025-07-19,2025-10-29,125,expired,,,102
+M032,C065,Basic,2026-11-08,2026-11-08,75,canceled,2026-11-08,Personal reasons,0
+M033,C066,Standard,2026-06-26,,125,active,,,147
+M034,C068,Basic,2026-05-28,2026-08-02,75,canceled,2026-08-02,No longer interested,66
+M035,C070,Premium,2024-11-24,,200,active,,,726
+M036,C071,Standard,2026-11-15,2026-11-18,125,canceled,2026-11-18,Relocation,3
+M037,C072,Basic,2026-05-03,2026-08-04,75,expired,,,93
+M038,C073,Premium,2026-07-23,,200,active,,,120
+M039,C075,Premium,2026-03-27,,200,active,,,238
+M040,C077,Premium,2026-06-13,2026-08-01,200,expired,,,49
+M041,C079,Premium,2025-11-02,,200,active,,,383
+M042,C082,Standard,2025-04-17,,125,active,,,582
+M043,C085,Premium,2026-09-14,2026-09-24,200,expired,,,10
+M044,C088,Premium,2026-08-15,,200,active,,,97
+M045,C089,Basic,2026-09-01,2026-09-06,75,canceled,2026-09-06,Personal reasons,5
+M046,C096,Basic,2026-05-27,2026-11-10,75,canceled,2026-11-10,Too expensive,167
+M047,C098,Premium,2026-08-26,,200,active,,,86
+M048,C099,Basic,2026-01-12,,75,active,,,312
+M049,C100,Premium,2026-10-20,,200,active,,,31
