@@ -8,6 +8,11 @@ The platform transforms raw business data into actionable insights about cash co
 
 **Project Status:** Version 1 — Core Development Complete
 
+## Live Dashboard
+
+[Launch the Personal Training Analytics Platform]
+(https://personal-training-analytics.streamlit.app/)
+
 ---
 
 ## Project Overview
