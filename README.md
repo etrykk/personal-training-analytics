@@ -27,41 +27,56 @@ V1 reference screenshots remain in `screenshots/`. Updated V2 screenshots can be
 
 ## Quick start (Windows / Anaconda Prompt)
 
-1. Open **Anaconda Prompt** and navigate to the project directory:
+### 1. Get the V2 project
 
-   ```cmd
-   cd /d "C:\Users\Ethan\Downloads\personal-training-analytics"
-   ```
-
-2. Install the dependencies:
-
-   ```cmd
-   python -m pip install -r requirements.txt
-   ```
-
-3. Launch the V2 application:
-
-   ```cmd
-   python -m streamlit run app/dashboard_v2.py
-   ```
-
-4. To use the original V1 dashboard instead:
-
-   ```cmd
-   python -m streamlit run app/dashboard.py
-   ```
-
-The application reads sample data from `data/processed/`. Imported CSVs are kept only in the current Streamlit session and do not overwrite these sample files.
-
-### Tests and release checks
+Open **Anaconda Prompt** (or Windows Command Prompt) and run:
 
 ```cmd
-cd /d "C:\Users\Ethan\Downloads\personal-training-analytics"
+git clone https://github.com/etrykk/personal-training-analytics.git
+cd personal-training-analytics
+git switch v2-development
+```
+
+The repository's `main` branch preserves V1. **Switching to `v2-development` is important**: that branch contains the V2 dashboard, enhanced analytics, and experimental research modules.
+
+If you prefer not to use Git, open the [V2 GitHub branch](https://github.com/etrykk/personal-training-analytics/tree/v2-development), choose **Code → Download ZIP**, extract it, and open Anaconda Prompt in the extracted project folder before continuing. The extracted folder may have a different name from `personal-training-analytics`.
+
+### 2. Install dependencies
+
+From the project root:
+
+```cmd
+python -m pip install -r requirements.txt
+```
+
+### 3. Launch the V2 dashboard
+
+```cmd
+python -m streamlit run app/dashboard_v2.py
+```
+
+Streamlit should show a local address, typically `http://localhost:8501`. Open it in your browser if it does not open automatically.
+
+### 4. Launch the original V1 dashboard (optional)
+
+The V1 dashboard is retained alongside V2:
+
+```cmd
+python -m streamlit run app/dashboard.py
+```
+
+The application reads included sample data from `data/processed/`. CSVs imported through the dashboard are held in the current Streamlit session and do not overwrite sample files.
+
+### 5. Run tests and the release audit
+
+From the project root:
+
+```cmd
 python -m pytest tests/ -v
 python -m src.release_audit
 ```
 
-The release audit checks file presence, syntax, schema headers, dependencies and common accidental-secret patterns. It **does not** replace browser testing, security review or verification on a fresh deployment.
+The release audit checks source-file presence, syntax, schema headers, dependencies, and common accidental-secret patterns. It **does not** replace browser testing, security review, or verification on a fresh deployment.
 
 ## Input datasets and method
 
@@ -123,6 +138,20 @@ personal-training-analytics/
 ```
 
 `outputs/` is generated locally and excluded from Git by `.gitignore`. Public deployments do not automatically receive locally generated research reports. Consult the [release checklist](docs/V2_RELEASE_CHECKLIST.md) before deploying V2.
+
+## Streamlit deployment
+
+You can deploy V2 separately from the original V1 app through [Streamlit Community Cloud](https://share.streamlit.io/). Use the following configuration:
+
+| Setting | Value |
+| --- | --- |
+| Repository | `etrykk/personal-training-analytics` |
+| Branch | `v2-development` |
+| Main file path | `app/dashboard_v2.py` |
+
+The deployed app must have access to the sample data and dependencies in the repository. The external Kaggle dataset and local `outputs/` folder are **not** automatically available in the cloud. Predictive Lab may display a missing-report message until approved aggregate reports are supplied. Do not deploy real client datasets or sensitive research outputs publicly.
+
+The `main` branch and original V1 Streamlit deployment can remain unchanged while V2 is tested.
 
 ## Privacy and deployment boundaries
 
