@@ -6,6 +6,14 @@ V2 expands the original Personal Training Analytics Platform with a YouTube Stud
 
 > **Status:** V2 in release preparation. The `main` branch preserves V1; `v2-development` contains the ongoing V2 work. The hosted V1 app should not be assumed to serve V2 until its deployment is updated.
 
+## Live Dashboard
+
+**PT Analytics Studio V2:** https://pt-analytics-studio-v2.streamlit.app/
+
+Explore the interactive business analytics dashboard, including client engagement, revenue, memberships, trainer performance, business indicators, and experimental predictive research.
+
+**Original V1 Dashboard:** https://personal-training-analytics.streamlit.app/
+
 ## Highlights
 
 | Area | Capabilities |
