@@ -1,631 +1,142 @@
-# Personal Training Analytics Platform
+# PT Analytics Studio — Personal Training Business Analytics (V2)
 
-A Python-based business intelligence platform designed to help personal trainers, fitness studios, and gym owners analyze business performance through automated data processing, interactive dashboards, and downloadable reports.
+**Python business intelligence and analytics for personal trainers and fitness studios**, with optional, clearly labeled experimental machine-learning research.
 
-The platform transforms raw business data into actionable insights about cash collection, client retention, training activity, and trainer performance.
+V2 expands the original Personal Training Analytics Platform with a YouTube Studio-inspired Streamlit interface, advanced engagement and revenue reporting, business health indicators, and a separate Predictive Lab. **Business analytics are the primary product; churn classification and revenue forecasting remain research-only.**
 
-**Technologies:** Python | pandas | Streamlit | Plotly | pytest
+> **Status:** V2 in release preparation. The `main` branch preserves V1; `v2-development` contains the ongoing V2 work. The hosted V1 app should not be assumed to serve V2 until its deployment is updated.
 
-**Project Status:** Version 1 — Core Development Complete
+## Highlights
 
-## Live Dashboard
+| Area | Capabilities |
+| --- | --- |
+| Dashboard | Business overview, monthly cash charts, client and session KPIs, interactive reporting-date and appearance controls |
+| Clients | 30/60/90-day attendance, activity continuation, engagement categories, inactivity and follow-up indicators |
+| Revenue & memberships | Gross payments, refunds, net cash collected, payment statuses, membership retention, expiration watchlists, monthly trends |
+| Sessions & trainers | Completion/no-show trends, weekday patterns, training hours, trainer comparisons, editable trainer display names |
+| Business indicators | Separate operational insights and follow-up indicators; rules-based, not churn probabilities |
+| Data import | Upload five CSV datasets, map columns, validate, switch between sample and imported data; imports remain in app session memory |
+| Reports | Download CSV/HTML reporting outputs and business summaries |
+| Predictive Lab | Aggregate external churn research and historical revenue forecasting backtests, **not personalized predictions** |
 
-[Launch the Personal Training Analytics Platform]
-(https://personal-training-analytics.streamlit.app/)
+### Dashboard structure
 
----
+The Streamlit sidebar contains **Dashboard**, **Clients**, **Revenue**, **Sessions**, **Memberships**, **Trainers**, **Data Import**, **Business Reports**, **Business Indicators**, and **Predictive Lab**. The interface supports dark and light appearance options.
 
-## Project Overview
+V1 reference screenshots remain in `screenshots/`. Updated V2 screenshots can be added during the release process; do not label the existing V1 images as V2.
 
-The Personal Training Analytics Platform is an end-to-end Python data analytics project developed to demonstrate how business intelligence can be applied to the personal training industry.
+## Quick start (Windows / Anaconda Prompt)
 
-The application allows users to import business datasets, standardize column names, validate records, calculate performance metrics, and explore results through an interactive Streamlit dashboard.
+1. Open **Anaconda Prompt** and navigate to the project directory:
 
-The platform follows a modular architecture that separates data processing, validation, analytics, visualization, and reporting into independent Python components.
+   ```cmd
+   cd /d "C:\Users\Ethan\Downloads\personal-training-analytics"
+   ```
 
-The demonstration environment uses synthetic business data representing 100 personal training clients.
+2. Install the dependencies:
 
-### Project Objectives
+   ```cmd
+   python -m pip install -r requirements.txt
+   ```
 
-- Automate the processing and analysis of personal training business data.
-- Provide meaningful financial, client, session, and trainer performance metrics.
-- Reduce manual spreadsheet analysis.
-- Allow businesses to upload and analyze their own CSV datasets.
-- Present business performance through interactive visualizations.
-- Generate downloadable business reports.
-- Establish a foundation for future predictive analytics and database integration.
+3. Launch the V2 application:
 
----
+   ```cmd
+   python -m streamlit run app/dashboard_v2.py
+   ```
 
-## Dashboard Preview
+4. To use the original V1 dashboard instead:
 
-### Business Overview
+   ```cmd
+   python -m streamlit run app/dashboard.py
+   ```
 
-![Business Overview](screenshots/business_overview.png)
+The application reads sample data from `data/processed/`. Imported CSVs are kept only in the current Streamlit session and do not overwrite these sample files.
 
-The Business Overview dashboard displays key performance indicators, including net cash collected, clients acquired, and completed training sessions.
+### Tests and release checks
 
-An interactive monthly cash collection chart allows users to examine financial performance over time.
+```cmd
+cd /d "C:\Users\Ethan\Downloads\personal-training-analytics"
+python -m pytest tests/ -v
+python -m src.release_audit
+```
 
-### Trainer Analytics
+The release audit checks file presence, syntax, schema headers, dependencies and common accidental-secret patterns. It **does not** replace browser testing, security review or verification on a fresh deployment.
 
-![Trainer Analytics](screenshots/trainer_analytics.png)
+## Input datasets and method
 
-The Trainer Analytics dashboard provides insight into individual trainer performance.
+The five canonical CSV datasets are `clients`, `memberships`, `packages`, `sessions`, and `payments`. `src/data_schema.py` defines required fields, identifiers, date/numeric columns, and accepted categories. `src/data_input/` handles CSV importing and column mapping; `src/validation.py` checks formatting and relationships.
 
-Users can select trainers by name and analyze completed sessions, total training hours, and directly attributable session cash collection.
+The standard analytical path is:
 
-Interactive visualizations allow comparisons across individual trainers and the overall training team.
+**CSV import or processed sample → mapping and validation → descriptive analytics → business indicators → Streamlit charts/reports**
 
----
+Analytics logic is separated into `src/analytics/`. Machine learning research and model-readiness guards are in `src/ml/`. Dashboard code is in `app/dashboard_v2.py`, with shared data and view helpers in `src/dashboard_data.py` and `src/dashboard_views.py`.
 
-## Key Features
+## Predictive Lab: experimental results only
 
-### 1. Business Overview
+### External gym churn classification
 
-Provides a high-level summary of business performance.
+A separate external gym membership dataset of approximately 4,000 records was used to evaluate Logistic Regression against a majority-class baseline. In the initial retrospective holdout, Logistic Regression achieved approximately **68.7% accuracy**, **80.4% churn recall**, **44.9% precision**, and **0.791 ROC-AUC**.
 
-**Metrics include:**
-- Net cash collected
-- Total clients acquired
-- Completed training sessions
-- Monthly cash collection trends
+Subsequent threshold and regularization research on a *different* held-out split increased precision to approximately **49.6%**, while recall fell to approximately **65.1%**. These results are **not directly interchangeable** with the initial split.
 
-### 2. Revenue Analytics
+The external dataset does not establish verified timing of all features before cancellation. Accordingly, these are retrospective research metrics—not validated 30-day cancellation predictions. Individual business predictions remain **disabled** when historical outcomes or data quality are insufficient.
 
-Evaluates business payment activity and cash collection performance.
+### Revenue forecasting backtests
 
-**Features include:**
-- Net cash collected
-- Monthly cash collection
-- Cash collection by payment type
-- Month-over-month growth
-- Cash collected per client
-- Refund analysis
-- Interactive financial visualizations
+The revenue experiment compares last-month persistence, three-month average, and six-month linear trend models using historical completed-month net cash. Partial months and a potentially incomplete initial month are excluded. Development-period selection is performed **before** the six-month May–October 2026 holdout is scored.
 
-Net cash collected is calculated using completed payment transactions minus completed refunds. It represents cash collection rather than accounting profit.
+The **last-month baseline** won development selection. On the reserved holdout it had a mean absolute error (MAE) of approximately **$2,202** and root mean squared error (RMSE) of approximately **$2,744**. The linear trend scored better on that reserved period, but we do not retroactively switch winners using test results. Live revenue forecasts and dependable prediction intervals are **not enabled**.
 
-### 3. Client Analytics
+Research CSV outputs are generated locally and read by Predictive Lab if available; if they are absent, the page displays a missing-report message rather than inventing results. See [Methods and limitations](docs/V2_METHODS_AND_LIMITATIONS.md).
 
-Analyzes client acquisition, membership activity, and engagement.
-
-**Features include:**
-- Monthly client acquisition
-- Client status distribution
-- Membership cancellations
-- Membership cohort retention
-- Pay-per-session client inactivity indicators
-
-Membership cohort retention measures the continuation of eligible membership contracts over time.
-
-Inactivity indicators identify clients who have not completed a training session within a specified period. These indicators are not treated as confirmed client churn.
-
-### 4. Session Analytics
-
-Examines training activity, attendance, and service utilization.
-
-**Features include:**
-- Completed training sessions
-- Session attendance and completion rates
-- Monthly training activity
-- Session activity by pricing model
-- Training package redemption
-- Session status analysis
-
-### 5. Trainer Analytics
-
-Evaluates operational performance across individual trainers.
-
-**Features include:**
-- Trainer selection using readable names
-- Completed sessions by trainer
-- Completed training hours
-- Unique clients served
-- Monthly trainer activity
-- Session completion rates
-- Directly attributable session cash collection
-
-Interactive filtering allows users to analyze individual trainers or compare multiple trainers.
-
-### 6. Data Import and Validation
-
-Allows users to upload and analyze their own business datasets.
-
-**Supported datasets:**
-- Clients
-- Memberships
-- Packages
-- Sessions
-- Payments
-
-**Import workflow:**
-
-1. Upload CSV datasets.
-2. Preview uploaded data.
-3. Automatically match recognized column names.
-4. Manually map unfamiliar columns when necessary.
-5. Validate datasets.
-6. Review validation errors and warnings.
-7. Activate imported data for analysis.
-
-The import pipeline processes uploaded datasets without overwriting the original sample or processed CSV files.
-
-### 7. Business Reporting
-
-Generates downloadable business reports containing summary metrics, charts, and supporting analytical tables.
-
-**Reporting capabilities include:**
-- HTML business reports
-- Interactive Plotly visualizations
-- Revenue analysis tables
-- Client analysis tables
-- Session analysis tables
-- Trainer performance tables
-- Individual CSV exports
-- ZIP archives containing complete report packages
-
-Reports can be generated through the Streamlit dashboard or directly through the Python reporting module.
-
----
-
-## Technologies and Libraries
-
-| Technology | Purpose |
-|---|---|
-| Python | Core application development |
-| pandas | Data cleaning, manipulation, and analysis |
-| Streamlit | Interactive web application |
-| Plotly | Interactive charts and visualizations |
-| pytest | Automated validation and analytics testing |
-| pathlib | File and directory management |
-| HTML | Browser-readable business reports |
-| CSV | Data importing, storage, and exporting |
-| Git / GitHub | Version control and project distribution |
-
----
-
-## Project Architecture
-
-The platform follows a modular data analytics workflow:
-
-**Data Generation / CSV Import → Data Cleaning → Validation → Analytics → Visualization → Reporting**
-
-### Data Generation
-
-Synthetic datasets simulate personal training business operations, including client registrations, membership purchases, training packages, scheduled sessions, and financial transactions.
-
-### Data Cleaning
-
-Raw data is standardized and prepared for analysis.
-
-Cleaning operations include data type conversion, date processing, and the preparation of analytical features.
-
-### Data Validation
-
-Validation functions identify problems such as missing required columns, duplicate identifiers, invalid dates, incorrect numerical values, invalid categories, and inconsistent relationships between datasets.
-
-### Analytics Engine
-
-Separate modules calculate business performance metrics using pandas filtering, grouping, aggregation, and time-based analysis.
-
-### Visualization
-
-Reusable Plotly functions standardize chart formatting, labels, spacing, and interactive hover information.
-
-### Reporting
-
-The reporting module combines analytical results into downloadable HTML reports and CSV tables.
-
----
-
-## Project Structure
+## Project layout
 
 ```text
 personal-training-analytics/
-│
 ├── app/
-│   └── dashboard.py
-│
+│   ├── dashboard.py                  # Original V1 dashboard
+│   └── dashboard_v2.py               # V2 Studio interface
 ├── data/
-│   ├── processed/
 │   ├── sample/
-│   └── templates/
-│
+│   ├── processed/
+│   └── external/                     # Optional research dataset (local)
 ├── docs/
 │   ├── data_dictionary.md
 │   ├── kpi_definitions.md
-│   └── requirements.md
-│
-├── outputs/
-│   ├── clients/
-│   ├── reports/
-│   ├── revenue/
-│   ├── sessions/
-│   └── trainers/
-│
-├── screenshots/
-│   ├── business_overview.png
-│   └── trainer_analytics.png
-│
+│   ├── V2_METHODS_AND_LIMITATIONS.md
+│   └── V2_RELEASE_CHECKLIST.md
 ├── src/
-│   ├── data_input/
-│   │   ├── column_mapper.py
-│   │   ├── csv_loader.py
-│   │   └── import_pipeline.py
-│   │
-│   ├── clean_data.py
-│   ├── client_analysis.py
-│   ├── generate_data.py
-│   ├── reporting.py
-│   ├── revenue_analysis.py
-│   ├── session_analysis.py
-│   ├── trainer_analysis.py
+│   ├── analytics/                    # Business reporting and engagement
+│   ├── data_input/                   # CSV import and column mapping
+│   ├── ml/                           # Experimental models and evaluations
+│   ├── dashboard_data.py
+│   ├── dashboard_views.py
+│   ├── data_schema.py
 │   ├── validation.py
-│   └── visualizations.py
-│
+│   └── release_audit.py
 ├── tests/
-│   ├── test_analytics.py
-│   └── test_validation.py
-│
-├── .gitignore
-├── README.md
-└── requirements.txt
+├── screenshots/                      # Existing V1 reference images
+├── requirements.txt
+└── README.md
 ```
 
-The `outputs/` directory contains generated analytical reports and is excluded from version control.
+`outputs/` is generated locally and excluded from Git by `.gitignore`. Public deployments do not automatically receive locally generated research reports. Consult the [release checklist](docs/V2_RELEASE_CHECKLIST.md) before deploying V2.
 
-The `data/sample/` and `data/processed/` directories contain synthetic demonstration datasets used by the application.
+## Privacy and deployment boundaries
 
----
+- The bundled business sample is synthetic. **Do not commit real client records, secrets, imported CSVs, or individual prediction rows to a public repository.**
+- Session-memory CSV upload is not a secure multi-business database or a guarantee of enterprise-grade data protection.
+- No commercial multi-tenant authentication, individualized model training, automatic retraining or Trainerize API synchronization is claimed for V2.
+- Predictive Lab must not imply that its experimental research results apply to an uploaded business.
+- Avoid financial decisions based solely on experimental forecasting scores.
 
-## Dataset Description
+## Further documentation
 
-The platform uses five related datasets representing different aspects of personal training business operations.
+- [V2 methods and limitations](docs/V2_METHODS_AND_LIMITATIONS.md)
+- [V2 release checklist](docs/V2_RELEASE_CHECKLIST.md)
+- [Data dictionary](docs/data_dictionary.md)
+- [KPI definitions](docs/kpi_definitions.md)
 
-| Dataset | Description |
-|---|---|
-| Clients | Client identifiers, registration dates, status, and trainer assignments |
-| Memberships | Membership contracts, start dates, end dates, and cancellations |
-| Packages | Training package information and redemption activity |
-| Sessions | Scheduled appointments, attendance, duration, and trainer assignments |
-| Payments | Payment transactions, refunds, amounts, and payment types |
-
-These datasets are connected through identifiers such as client IDs, trainer IDs, and package IDs.
-
-All demonstration data is synthetic and does not contain real client information.
-
----
-
-## Data Processing and Methodology
-
-### Data Cleaning
-
-The application uses pandas to read and process CSV datasets.
-
-Data preparation includes:
-
-- Checking column names and data types
-- Converting dates into datetime values
-- Converting numerical fields into appropriate types
-- Standardizing categorical values
-- Preparing features for time-based analysis
-- Identifying invalid or inconsistent observations
-
-### Data Validation
-
-The validation system checks datasets before they are used for business analysis.
-
-Validation includes:
-
-- Required column verification
-- Missing value detection
-- Duplicate identifier detection
-- Invalid date detection
-- Negative or invalid numerical values
-- Invalid categorical values
-- Referential integrity between related datasets
-
-### Financial Analysis
-
-Financial metrics are calculated from completed payment and refund transactions.
-
-**Net Cash Collected**
-
-Net Cash Collected = Completed Payments − Completed Refunds
-
-**Monthly Cash Collection**
-
-Monthly Cash Collection = Sum of Net Transactions Within Each Month
-
-**Month-over-Month Growth**
-
-Growth (%) = ((Current Month − Previous Month) / Previous Month) × 100
-
-Growth is reported only when the previous month's value provides a valid positive denominator.
-
-### Client Analytics
-
-Client acquisition is calculated by grouping client registration dates into monthly periods.
-
-Membership cohort retention is calculated by determining which eligible memberships remain in force at successive monthly anniversaries.
-
-**Membership Retention (%)**
-
-Retention Rate = (Retained Eligible Memberships / Eligible Memberships) × 100
-
-Only memberships old enough to reach the corresponding anniversary are included in the denominator.
-
-Pay-per-session inactivity is evaluated using the number of days since a client's most recent completed session.
-
-### Session Analytics
-
-Session activity is evaluated using appointment records and their associated statuses.
-
-**Session Completion Rate (%)**
-
-Completion Rate = (Completed Sessions / Total Relevant Sessions) × 100
-
-Additional analyses examine monthly attendance, pricing models, and package redemption activity.
-
-### Trainer Analytics
-
-Trainer performance is evaluated through session records and related financial transactions.
-
-Metrics include completed sessions, training hours, unique clients served, and directly attributable session cash collection.
-
-These metrics describe operational activity and do not represent individual trainer profitability.
-
----
-
-## Demonstration Results
-
-The following results were generated using the synthetic dataset with a reporting date of November 20, 2026.
-
-| Metric | Result |
-|---|---:|
-| Total Clients | 100 |
-| Net Cash Collected | $117,565 |
-| Completed Training Sessions | 1,495 |
-| Completed Training Hours | 1,397.5 |
-| Attributable Session Cash | $65,890 |
-| Trainers Represented | 10 |
-
-These figures demonstrate the functionality of the platform and do not represent actual business performance.
-
----
-
-## Installation and Setup
-
-### Prerequisites
-
-- Python
-- pip
-- Git
-- A web browser
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/etrykk/personal-training-analytics.git
-cd personal-training-analytics
-```
-
-### 2. Create a Virtual Environment
-
-```bash
-python -m venv .venv
-```
-
-Activate the environment.
-
-**Windows:**
-
-```bat
-.venv\Scripts\activate
-```
-
-**macOS / Linux:**
-
-```bash
-source .venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-### 4. Run the Dashboard
-
-```bash
-python -m streamlit run app/dashboard.py
-```
-
-The application will typically be available at:
-
-http://localhost:8501
-
-### 5. Select a Dataset
-
-The dashboard supports two data sources:
-
-**Sample Data:** Uses the included synthetic demonstration datasets.
-
-**Imported Data:** Uses CSV datasets uploaded and validated through the Data Import page.
-
----
-
-## Running Automated Tests
-
-The project uses pytest to verify validation behavior and business analytics calculations.
-
-The initial automated testing suite contains 34 tests.
-
-**Validation testing includes:**
-- Missing columns
-- Duplicate identifiers
-- Invalid dates
-- Incorrect numerical values
-- Invalid categorical values
-- Broken relationships between datasets
-
-**Analytics testing includes:**
-- Revenue calculations
-- Refund analysis
-- Client acquisition
-- Membership retention
-- Client inactivity
-- Session attendance
-- Package redemption
-- Trainer activity
-
-Run all tests using:
-
-```bash
-python -m pytest tests/ -v
-```
-
-**Latest verified local result:**
-
-34 passed, 0 failed, 1 noncritical warning.
-
-The warning was related to pandas date-format inference during a validation test.
-
----
-
-## Generating Business Reports
-
-Business reports can be generated directly through the Streamlit dashboard.
-
-Alternatively, run:
-
-```bash
-python src/reporting.py
-```
-
-Generated reports are saved to:
-
-```text
-outputs/reports/
-```
-
-The reporting system generates HTML and CSV outputs that can be reviewed independently of the dashboard.
-
-The Business Reports page also provides downloadable HTML and ZIP report packages.
-
----
-
-## Technical Documentation
-
-Additional project documentation is available in the `docs/` directory.
-
-### Data Dictionary
-
-[View Data Dictionary](docs/data_dictionary.md)
-
-Documents the structure of the datasets, including column names, data types, identifiers, and relationships.
-
-### KPI Definitions
-
-[View KPI Definitions](docs/kpi_definitions.md)
-
-Provides detailed explanations of the business performance metrics and calculation methodologies used throughout the platform.
-
-### Project Requirements
-
-[View Project Requirements](docs/requirements.md)
-
-Documents the project's functional requirements, analytical objectives, and technical specifications.
-
----
-
-## Current Limitations
-
-Version 1 is a functional analytics prototype designed for demonstration and further development.
-
-Current limitations include:
-
-- CSV-based data storage
-- No persistent relational database
-- No account authentication or role-based permissions
-- No automated synchronization with external fitness management platforms
-- Limited flexibility for different business data structures
-- No predictive machine learning models
-- No multi-business data isolation
-- No production-grade security infrastructure
-
-The platform should be used with synthetic or appropriately authorized data until additional security and privacy controls are implemented.
-
----
-
-## Planned Version 2 Development
-
-Future development is planned to expand the platform into a more advanced analytics application.
-
-### Predictive Analytics
-
-- Client churn prediction
-- Revenue forecasting
-- Membership cancellation risk analysis
-- Predictive business performance indicators
-
-### Data Infrastructure
-
-- Persistent database integration
-- Expanded data import capabilities
-- Automated data synchronization
-- External API integrations, including Trainerize where supported
-
-### Application Features
-
-- User authentication
-- Business account management
-- Multi-business data isolation
-- Expanded reporting options
-- Advanced interactive visualizations
-- Additional trainer and client performance metrics
-
-These features are planned enhancements and are not part of the current Version 1 implementation.
-
----
-
-## Skills Demonstrated
-
-This project demonstrates practical experience in:
-
-- Python programming
-- Data cleaning and preprocessing
-- Data validation
-- Data analysis using pandas
-- Business intelligence
-- KPI development
-- Financial and operational analytics
-- Interactive dashboard development
-- Data visualization with Plotly
-- Automated testing with pytest
-- Modular software architecture
-- CSV importing and column mapping
-- HTML and CSV reporting
-- Technical documentation
-
----
-
-## Project Purpose
-
-The Personal Training Analytics Platform was developed as an independent Python and data analytics portfolio project.
-
-It combines programming, statistical reasoning, and knowledge of personal training business operations to demonstrate how raw operational data can be transformed into meaningful business insights.
-
-The project also establishes a technical foundation for future development involving machine learning, predictive analytics, database systems, and commercial business intelligence applications.
-
----
-
-## Author
-
-**etrykk**
-
-Independent Python and Data Analytics Project
-
-GitHub: https://github.com/etrykk
+**Stack:** Python, pandas, NumPy, scikit-learn, Streamlit, Plotly, pytest.

@@ -5,8 +5,7 @@
 
 import pandas as pd
 
-
-#Import standardized dataset schemas
+#Import standardized dataset schemas from the existing V2 module
 from data_schema import (
     REQUIRED_COLUMNS,
     ID_COLUMNS,
@@ -16,6 +15,7 @@ from data_schema import (
 )
 
 REPORT_COLUMNS = ['dataset', 'severity', 'check', 'column', 'affected_rows', 'message']
+
 
 def _issue(dataset, severity, check, column, rows, message):
     return {'dataset': dataset, 'severity': severity, 'check': check,
@@ -65,7 +65,8 @@ def validate_data_types(data, dataset_name):
     for column in DATE_COLUMNS.get(dataset_name, []):
         if column in data.columns:
             values = data[column].replace(r'^\s*$', pd.NA, regex=True)
-            converted = pd.to_datetime(values, errors='coerce')
+            #Allow the mixed date formats accepted by CSV imports without inference warnings
+            converted = pd.to_datetime(values, format='mixed', errors='coerce')
             count = int((values.notna() & converted.isna()).sum())
             if count:
                 issues.append(_issue(dataset_name, 'error', 'invalid_date', column,

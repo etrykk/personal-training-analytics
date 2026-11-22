@@ -30,6 +30,8 @@ from src.dashboard_data import (ANALYTICS_COLUMNS, prepare_dashboard_data,
 from src.data_input.column_mapper import suggest_column_mapping
 from src.data_input.import_pipeline import import_datasets, DATASET_NAMES
 from src.data_schema import REQUIRED_COLUMNS
+from src.ml.predictive_lab_reports import load_experimental_summary, research_comparison_table
+from src.ml.revenue_lab_reports import load_revenue_backtest_summary, revenue_comparison_table
 from src.reporting import build_reports, export_reports
 from src.trainer_analysis import (trainer_activity, trainer_monthly_activity,
                                   trainer_direct_session_cash)
@@ -511,12 +513,105 @@ def trainers_page(reports, dark, labels, datasets, report_date):
             csv_download(cash, 'v2_trainer_cash.csv')
 
 
-def experimental_page():
-    st.title('Predictive lab')
-    st.caption('Experimental · Not part of the primary business overview')
-    st.info('Churn prediction and revenue forecasting have not been implemented in V2 yet.')
-    st.write('Models will only be presented after adequate historical data, baseline comparisons, '
-             'and appropriate validation. No client is assigned a machine-learning churn risk here.')
+def experimental_page(dark):
+    st.title('Predictive Lab')
+    st.caption('Experimental research · Not individualized client predictions')
+
+    st.subheader('Business-specific churn prediction')
+    st.warning('Unavailable — this project dataset has too few independent cancellation '
+               'events to validate a reliable business-specific model.')
+    st.write('The experimental machine learning pipeline does not assign churn '
+             'probabilities or risk classifications to your clients. Descriptive '
+             'engagement indicators remain available in the Clients and Business Indicators pages.')
+
+    st.divider()
+    st.subheader('External gym churn research')
+    report_dir = PROJECT_ROOT / 'outputs' / 'predictive' / 'external_experiment'
+    summary = load_experimental_summary(report_dir)
+    if summary['status'] == 'missing':
+        st.info('No external research reports found yet. Run the Phase 4E experiment '
+                'to generate them, then revisit this page.')
+        st.code('python -m src.ml.external_churn_experiment', language='bash')
+    elif summary['status'] != 'research_only':
+        st.warning('External experiment reports are incomplete or inconsistent. '
+                   'The dashboard will not show churn model scores.')
+    else:
+        st.caption('Retrospective random holdout · External gym membership dataset · '
+                   'Not a verified 30-day prediction study')
+        counts = summary['models']['logistic_regression']
+        baseline = summary['models']['majority_class_baseline']
+        a, b, c, d = st.columns(4)
+        a.metric('Test accuracy', f"{counts['accuracy']:.1%}")
+        b.metric('Churn recall', f"{counts['recall']:.1%}")
+        c.metric('Precision', f"{counts['precision']:.1%}")
+        d.metric('ROC-AUC', f"{counts['roc_auc']:.3f}")
+        if counts['accuracy'] < baseline['accuracy']:
+            st.warning('Model accuracy is below the majority-class baseline. Higher recall '
+                       'comes with more false-positive alerts.')
+        st.write(f"On {summary['test_rows']:,} held-out records, Logistic Regression correctly "
+                 f"flagged {counts['true_positives']:,} churn cases, missed "
+                 f"{counts['false_negatives']:,}, and incorrectly flagged "
+                 f"{counts['false_positives']:,} clients who stayed.")
+        st.subheader('Model comparison')
+        comparison = research_comparison_table(summary)
+        st.dataframe(comparison.style.format({
+            'Accuracy': '{:.1%}', 'Recall': '{:.1%}', 'Precision': '{:.1%}',
+            'F1': '{:.3f}', 'Balanced accuracy': '{:.1%}', 'ROC-AUC': '{:.3f}'
+        }), hide_index=True, use_container_width=True)
+        st.caption(f"Research dataset: {summary['input_rows']:,} rows · Train: "
+                   f"{summary['train_rows']:,} · Test: {summary['test_rows']:,}")
+        st.info('The external dataset has no verified before-cancellation feature timestamps '
+                'or time-aware validation. These scores do not establish real-world '
+                '30-day prediction performance. Business-specific predictions remain disabled.')
+
+    #Historical monthly cash backtest comes from fixed sample reports only.
+    #Never fit models here or infer forecast values for an uploaded business.
+    st.divider()
+    st.subheader('Revenue forecasting research')
+    st.caption('Historical sample-business backtest · Not a forecast for the selected data source')
+    revenue_dir = PROJECT_ROOT / 'outputs' / 'predictive' / 'revenue_evaluation'
+    revenue = load_revenue_backtest_summary(revenue_dir)
+    if revenue['status'] == 'missing':
+        st.info('Revenue backtest reports have not been generated on this installation.')
+        st.code('python -m src.ml.revenue_forecast_evaluation', language='bash')
+    elif revenue['status'] != 'historical_research':
+        st.warning('Revenue backtest reports are incomplete or inconsistent. '
+                   'The dashboard will not display forecasting scores.')
+    else:
+        st.info('Historical comparison only. Live revenue forecasting is disabled. '
+                'The development-period winner is shown even when another method '
+                'performs better on the reserved test months.')
+        st.caption(f"Selected before holdout: **{revenue['selected_label']}** · "
+                   f"Training through {revenue['training_end_month']} · "
+                   f"Holdout: {revenue['holdout_start_month']} to {revenue['holdout_end_month']}")
+        a, b, c = st.columns(3)
+        a.metric('Development MAE', money(revenue['development_mae']))
+        b.metric('Reserved holdout MAE', money(revenue['holdout_mae']))
+        c.metric('Reserved holdout RMSE', money(revenue['holdout_rmse']))
+        chosen_horizon = st.selectbox('Backtest horizon',
+             ['All horizons', '1 month ahead', '2 months ahead', '3 months ahead'],
+             key='forecast_research_horizon')
+        horizon = {'All horizons': 'all', '1 month ahead': '1',
+                   '2 months ahead': '2', '3 months ahead': '3'}[chosen_horizon]
+        st.dataframe(revenue_comparison_table(revenue, horizon).style.format({
+            'MAE': '${:,.2f}', 'RMSE': '${:,.2f}'
+        }), hide_index=True, use_container_width=True)
+        st.caption('MAE = mean absolute error; RMSE = root mean squared error. '
+                   'Lower is better. Scores cover six held-out target months, '
+                   'with overlapping 1–3-month evaluation horizons.')
+        st.subheader('Historical one-month-ahead forecast vs. actual cash')
+        historical = revenue['historical_months'].copy()
+        historical['Month'] = pd.PeriodIndex(historical['Month'], freq='M').to_timestamp()
+        long = historical.melt(id_vars='Month', value_vars=['Actual net cash',
+                                      'Historical forecast'], var_name='Series', value_name='Net cash')
+        fig = px.line(long, x='Month', y='Net cash', color='Series', markers=True,
+                      color_discrete_map={'Actual net cash': '#22A18C',
+                                          'Historical forecast': '#93A5C2'})
+        fig.update_yaxes(tickprefix='$')
+        make_chart(fig, dark)
+        st.warning('Six test months provide limited evidence; forecasting errors may be large. '
+                   'These values are observed historical backtests, not future projections '
+                   'or business financial advice.')
 
 
 def search_page(reports, query, labels):
@@ -816,7 +911,7 @@ def main():
     elif section == 'Business Indicators':
         business_indicators_page(reports)
     elif section == 'Predictive Lab':
-        experimental_page()
+        experimental_page(dark)
 
 
 if __name__ == '__main__':
